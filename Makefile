@@ -36,7 +36,7 @@ define Package/miredo
 	CATEGORY:=Network
 	TITLE:=Teredo IPv6 tunneling utility
 	URL:=https://www.remlab.net/miredo/
-	DEPENDS:= @IPV6 +libpthread +librt +ip +kmod-tun
+	DEPENDS:= @IPV6 +libpthread +librt +ip +kmod-tun +libcap
 endef
 
 define Package/miredo/description
