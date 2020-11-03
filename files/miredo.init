@@ -1,0 +1,55 @@
+#!/bin/sh /etc/rc.common
+
+USE_PROCD=1
+START=20
+
+PROG=/usr/sbin/miredo
+CONFFILE=/etc/miredo/miredo.conf
+
+start_service() {
+  procd_open_instance
+  procd_set_param command $PROG -f -c $CONFFILE
+  procd_set_param respawn
+  procd_set_param file $CONFFILE
+  procd_set_param stdout 1 # forward stdout of the command to logd
+  procd_set_param stderr 1 # same for stderr
+  #procd_set_param user nobody # run service as user nobody
+  procd_close_instance
+  wirtecron1=$(cat /etc/crontabs/root | grep "*/1 * * * *" | grep "teredo")
+	if [ -z "$wirtecron1" ];then
+		sed -i '/teredo/d' /etc/crontabs/root >/dev/null 2>&1
+		echo '*/1 * * * * isfound=$(ifconfig | grep "teredo" | grep -v "grep"); if [ -z "$isfound" ]; then echo "$(date): restart miredo...">>/tmp/log/miredo-monitor.log && /etc/init.d/miredo restart; fi' >> /etc/crontabs/root 
+		echo '*/1 * * * * isfound=$(ifconfig | grep "teredo" | grep -v "grep"); if [ -z "$isfound" ]; then echo "$(date): restart firewall...">>/tmp/log/firewall-monitor.log && /etc/init.d/firewall restart; fi' >> /etc/crontabs/root	
+	fi
+
+     wirtecron2=$(cat /etc/crontabs/root | grep "*/1 * * * *" | grep "inet6")
+	if [ -z "$wirtecron2" ];then
+		sed -i '/inet6/d' /etc/crontabs/root >/dev/null 2>&1
+		echo '#*/1 * * * * isfound=$(ifconfig | grep "inet6" | grep -v "grep"); if [ -z "$isfound" ]; then echo "$(date): restart ipv6...">>/tmp/log/ipv6-monitor.log && /etc/init.d/miredo restart; fi' >> /etc/crontabs/root
+		echo '*/1 * * * * isfound=$(ifconfig | grep "inet6" | grep -v "grep"); if [ -z "$isfound" ]; then echo "$(date): restart ipv6...">>/tmp/log/ipv6-monitor.log && /etc/init.d/firewall restart; fi' >> /etc/crontabs/root
+	fi
+
+  sysctl -w net.ipv6.conf.all.disable_ipv6=0
+  sysctl -w net.ipv6.conf.br-lan.disable_ipv6=0
+  sysctl -w net.ipv6.conf.default.disable_ipv6=0
+  sysctl -w net.ipv6.conf.dummy0.disable_ipv6=0
+  sysctl -w net.ipv6.conf.erspan0.disable_ipv6=0
+  sysctl -w net.ipv6.conf.eth0.disable_ipv6=0
+  sysctl -w net.ipv6.conf.eth1.disable_ipv6=0
+  sysctl -w net.ipv6.conf.eth2.disable_ipv6=0
+  sysctl -w net.ipv6.conf.eth3.disable_ipv6=0
+  sysctl -w net.ipv6.conf.eth4.disable_ipv6=0
+  sysctl -w net.ipv6.conf.eth5.disable_ipv6=0
+  sysctl -w net.ipv6.conf.gre0.disable_ipv6=0
+  sysctl -w net.ipv6.conf.gretap0.disable_ipv6=0
+  sysctl -w net.ipv6.conf.ifb0.disable_ipv6=0
+  sysctl -w net.ipv6.conf.ifb1.disable_ipv6=0
+  sysctl -w net.ipv6.conf.lo.disable_ipv6=0
+  sysctl -w net.ipv6.conf.pppoe-wan.disable_ipv6=0
+  sysctl -w net.ipv6.conf.siit0.disable_ipv6=0
+  sysctl -w net.ipv6.conf.sit0.disable_ipv6=0
+  sysctl -w net.ipv6.conf.teql0.disable_ipv6=0
+  sysctl -w net.ipv6.conf.tuncjdns.disable_ipv6=0
+  sysctl -w net.ipv6.conf.tunl0.disable_ipv6=0
+
+}
